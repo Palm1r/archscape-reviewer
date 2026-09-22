@@ -1,4 +1,4 @@
-# archscape-viewer
+# archscape-reviewer
 
 What a pull request changes, as a picture in one comment: the touched
 classes with their changed members, the arrows the change made, and
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: Palm1r/archscape-viewer@main
+      - uses: Palm1r/archscape-reviewer@main
         with:
           token: ${{ github.token }}
 ```
@@ -41,7 +41,7 @@ itself, nothing committed to your repository) or `both` (the PNG above,
 the Mermaid under a fold):
 
 ```yaml
-      - uses: Palm1r/archscape-viewer@main
+      - uses: Palm1r/archscape-reviewer@main
         with:
           token: ${{ github.token }}
           picture: mermaid
