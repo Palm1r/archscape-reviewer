@@ -1,0 +1,23 @@
+# archscape-reviewer (ADR-0055): the Changes view of a pull request as a
+# picture in one comment, with its New Directions under it. The picture
+# is committed to a branch of the reviewed repository; nothing leaves it.
+name: archscape-reviewer
+description: Draws what a pull request changes - the touched classes and the arrows it made - and keeps the picture in one comment.
+author: Petr Mironychev
+branding:
+  icon: map
+  color: orange
+inputs:
+  token:
+    description: A token with contents:write and pull-requests:write - github.token is enough.
+    required: true
+  branch:
+    description: The branch the pictures are committed to.
+    required: false
+    default: archscape/pictures
+runs:
+  using: docker
+  image: docker://ghcr.io/palm1r/archscape-reviewer:latest
+  env:
+    GITHUB_TOKEN: ${{ inputs.token }}
+    INPUT_BRANCH: ${{ inputs.branch }}
