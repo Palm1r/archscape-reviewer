@@ -35,6 +35,18 @@ jobs:
           token: ${{ github.token }}
 ```
 
+`picture:` chooses how the picture is shown - `png` (default: drawn by
+archscape, kept on the pictures branch), `mermaid` (text GitHub draws
+itself, nothing committed to your repository) or `both` (the PNG above,
+the Mermaid under a fold):
+
+```yaml
+      - uses: Palm1r/archscape-viewer@main
+        with:
+          token: ${{ github.token }}
+          picture: mermaid
+```
+
 A push to the pull request redraws the comment in place. Saying
 `@archscape-reviewer` in a comment draws it again on demand.
 
@@ -43,7 +55,8 @@ A push to the pull request redraws the comment in place. Saying
 | input | default | what |
 |---|---|---|
 | `token` | - | `github.token` is enough: contents and pull requests, write |
-| `branch` | `archscape/pictures` | the branch the pictures are committed to |
+| `branch` | `archscape/pictures` | the branch the pictures are committed to (png, both) |
+| `picture` | `png` | `png`, `mermaid` or `both` |
 
 ## What it reads
 
