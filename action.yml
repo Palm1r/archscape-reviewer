@@ -1,6 +1,7 @@
-# archscape-reviewer (ADR-0055): the Changes view of a pull request as a
-# picture in one comment, with its New Directions under it. The picture
-# is committed to a branch of the reviewed repository; nothing leaves it.
+# archscape-reviewer (ADR-0055, ADR-0057): a picture of a pull request in
+# one comment - the Guide's own when the comment reads it in order, the
+# Changes view otherwise. The picture is an artifact of the run that drew
+# it (T561); nothing leaves the repository.
 name: archscape-reviewer
 description: Draws what a pull request changes - the touched classes and the arrows it made - and keeps the picture in one comment.
 author: Petr Mironychev
@@ -9,15 +10,55 @@ branding:
   color: orange
 inputs:
   token:
-    description: A token with contents:write and pull-requests:write - github.token is enough.
+    description: A token with pull-requests:write and contents:read - github.token is enough.
     required: true
-  branch:
-    description: The branch the pictures are committed to.
+  picture:
+    description: "How the picture is shown: png (drawn by archscape, kept as an artifact of the run that drew it), mermaid (text GitHub draws itself - nothing kept), or both (png above, mermaid under a fold)."
     required: false
-    default: archscape/pictures
+    default: png
+  guide:
+    description: "When the Review carries its Guide - the order to read the changes in, with a picture of its own: auto (more than five changed files), always, or never."
+    required: false
+    default: auto
+  detail:
+    description: "How much the picture draws: compact (with a Guide, the Guide's own picture - its items numbered and what they newly depend on; without one, a class lists twelve changed rows, a test's or an example's rows are said in one, and the picture says what it hid) or full (every row and arrow)."
+    required: false
+    default: compact
 runs:
-  using: docker
-  image: docker://ghcr.io/palm1r/archscape-reviewer:latest
-  env:
-    GITHUB_TOKEN: ${{ inputs.token }}
-    INPUT_BRANCH: ${{ inputs.branch }}
+  using: composite
+  steps:
+    # The image draws: both sides fetched, the picture staged in the
+    # workspace, the Range and the file said as outputs.
+    - id: draw
+      uses: docker://ghcr.io/palm1r/archscape-reviewer:latest
+      with:
+        args: draw
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        INPUT_PICTURE: ${{ inputs.picture }}
+        INPUT_GUIDE: ${{ inputs.guide }}
+        INPUT_DETAIL: ${{ inputs.detail }}
+    # The picture's home: an artifact of this run, unzipped so that a
+    # browser opens it as a picture. Storage refused - a private
+    # repository's spent quota, say - costs the picture, not the Review.
+    - id: keep
+      if: steps.draw.outputs.picture != ''
+      continue-on-error: true
+      uses: actions/upload-artifact@v7
+      with:
+        path: ${{ github.workspace }}/${{ steps.draw.outputs.picture }}
+        archive: false
+        if-no-files-found: error
+    # The image posts: the Review's words around the artifact's address.
+    - if: steps.draw.outputs.range != ''
+      uses: docker://ghcr.io/palm1r/archscape-reviewer:latest
+      with:
+        args: post
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        INPUT_PICTURE: ${{ inputs.picture }}
+        INPUT_GUIDE: ${{ inputs.guide }}
+        INPUT_DETAIL: ${{ inputs.detail }}
+        REVIEW_RANGE: ${{ steps.draw.outputs.range }}
+        REVIEW_PICTURE: ${{ steps.draw.outputs.picture }}
+        REVIEW_PICTURE_URL: ${{ steps.keep.outputs.artifact-url }}
